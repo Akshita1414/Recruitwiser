@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import "./Home.css";
 import image from "/Rectangle-2.png"
+import ChatBot from './Chat';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -360,7 +361,9 @@ const Home = () => {
           </form>
         </div>
       </div>
+      <ChatBot />
     </div>
+    
   );
 };
 

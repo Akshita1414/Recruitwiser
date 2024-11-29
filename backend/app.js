@@ -15,6 +15,7 @@ app.use(
   })
 );
 
+
 app.get("/", (req, res) => {
   res.send("hello");
 });
@@ -111,7 +112,23 @@ app.post("/application", async (req, res) => {
     );
 
     if (user) {
-      res.json({ status: "success", applications: user.applications });
+      // Send application email
+      const mailOptions = {
+        from: "akshita.chauhan1414@gmail.com", // Sender address
+        to: email, // Receiver address
+        subject: `Job Application Confirmation: ${jobTitle}`,
+        text: `Dear User,\n\nYou have successfully applied for the position of ${jobTitle} at ${company}, located in ${location}.\n\nBest regards,\nJob Application Team`,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Error sending email:", error);
+          res.status(500).json({ status: "email_error", message: "Failed to send email" });
+        } else {
+          console.log("Email sent:", info.response);
+          res.json({ status: "success", applications: user.applications });
+        }
+      });
     } else {
       res.status(404).json({ status: "user_not_found" });
     }
@@ -119,6 +136,7 @@ app.post("/application", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
 
 
 app.get("/applications", async (req, res) => {

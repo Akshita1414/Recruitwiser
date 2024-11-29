@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Login from './components/Login';
 import Signup from './components/Signup';
@@ -9,45 +10,52 @@ import Applications from './components/Applications';
 import Resources from './components/Resources';
 
 function App() {
+  // State to track applied jobs
+  const [appliedJobs, setAppliedJobs] = useState([]);
+
+  // Handler to add a job to the applied jobs list
+  const handleApplyJob = (job) => {
+    if (!appliedJobs.some((appliedJob) => appliedJob.job_position === job.job_position)) {
+      setAppliedJobs((prevJobs) => [...prevJobs, job]);
+    }
+  };
+
   const router = createBrowserRouter([
     {
       path: '/',
-      element: <Login />
+      element: <Login />,
     },
     {
       path: '/home',
-      element: <ProtectedRoute element={<Home />} />
+      element: <ProtectedRoute element={<Home />} />,
     },
     {
       path: '/login',
-      element: <Login />
+      element: <Login />,
     },
     {
       path: '/signup',
-      element: <Signup />
+      element: <Signup />,
     },
     {
-      path:'/jobs',
-      element: <JobList/>
+      path: '/jobs',
+      element: <JobList onApply={handleApplyJob} />, // Pass handler to JobList
     },
     {
       path: '/test/:skill',
-      element: <ProtectedRoute element={<Test />} />
+      element: <ProtectedRoute element={<Test />} />,
     },
     {
       path: '/applications',
-      element: <ProtectedRoute element={<Applications/>} />
+      element: <ProtectedRoute element={<Applications appliedJobs={appliedJobs} />} />, // Pass applied jobs to Applications
     },
     {
       path: '/upload-resume',
-      element: <ProtectedRoute element={<Resources/>} />
-    }
+      element: <ProtectedRoute element={<Resources />} />,
+    },
   ]);
 
-  return (
-    <RouterProvider router={router} />
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
-

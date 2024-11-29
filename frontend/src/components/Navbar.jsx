@@ -6,7 +6,7 @@ import "./Navbar.css"
 function Navbar() {
   return (
     <nav className="navbar">
-        <h1>SkillMingle</h1>
+        <h1>Recruitwiser</h1>
         <ul>
           <li>
             <Link to="/home">Dashboard</Link>

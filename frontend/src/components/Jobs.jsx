@@ -1,187 +1,123 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import './JobList.css'; 
-import Navbar from './Navbar';
+import React, { useState } from "react";
+import Navbar from "./Navbar";
+import "./JobList.css";
+import axios from "axios";
 
-const JobList = () => {
+const JobList = ({ onApply }) => {
   const [jobs, setJobs] = useState([]);
-  const [error, setError] = useState(null);
-  const [skills, setSkills] = useState({});
-  const [field, setField] = useState('frontend developer'); 
-  const [sortBy, setSortBy] = useState('day');
-  const [jobType, setJobType] = useState('full_time');
-  const [expLevel, setExpLevel] = useState('entry_level');
-  const [workType, setWorkType] = useState('at_work');
-  const [appliedJobs, setAppliedJobs] = useState({}); 
+  const [jobType, setJobType] = useState("All");
+  const [expLevel, setExpLevel] = useState("All");
+  const [jobLocation, setJobLocation] = useState("All");
+  const user_email = "arnav090404@gmail.com";
 
-  useEffect(() => {
-    const fetchJobTitle = async () => {
-      try {
-        const email = localStorage.getItem("userEmail");
-        const response = await axios.get('http://localhost:3000/resume', {
-          params: { email }
-        });
-        if (response.data.status === "success" && response.data.user.matchedJobTitle) {
-          setField(response.data.user.matchedJobTitle);
-        } else {
-          setField('frontend developer'); 
-        }
-      } catch (error) {
-        console.error("Failed to fetch job title:", error);
-        setField('frontend developer'); 
-      }
-    };
-  
-    fetchJobTitle();
-  }, []);
+  const jobsData = [
+    { job_position: "Frontend Developer", company_name: "Company A", job_location: "San Francisco", job_type: "Full Time", experience_level: "Entry Level", job_link: "#" },
+    { job_position: "Backend Developer", company_name: "Company B", job_location: "Remote", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Web Developer", company_name: "Company C", job_location: "New York", job_type: "Part Time", experience_level: "Entry Level", job_link: "#" },
+    { job_position: "Software Engineer", company_name: "Company D", job_location: "San Francisco", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "UX Designer", company_name: "Company E", job_location: "Los Angeles", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Product Manager", company_name: "Company F", job_location: "Austin", job_type: "Full Time", experience_level: "Senior Level", job_link: "#" },
+    { job_position: "Mobile Developer", company_name: "Company G", job_location: "San Francisco", job_type: "Full Time", experience_level: "Entry Level", job_link: "#" },
+    { job_position: "Data Scientist", company_name: "Company H", job_location: "New York", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "DevOps Engineer", company_name: "Company I", job_location: "Remote", job_type: "Full Time", experience_level: "Senior Level", job_link: "#" },
+    { job_position: "Fullstack Developer", company_name: "Company J", job_location: "San Francisco", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Cloud Engineer", company_name: "Company K", job_location: "Chicago", job_type: "Part Time", experience_level: "Entry Level", job_link: "#" },
+    { job_position: "QA Engineer", company_name: "Company L", job_location: "Los Angeles", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Marketing Specialist", company_name: "Company M", job_location: "Remote", job_type: "Part Time", experience_level: "Entry Level", job_link: "#" },
+    { job_position: "Data Analyst", company_name: "Company N", job_location: "Austin", job_type: "Full Time", experience_level: "Entry Level", job_link: "#" },
+    { job_position: "Security Engineer", company_name: "Company O", job_location: "San Francisco", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Product Designer", company_name: "Company P", job_location: "Los Angeles", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Business Analyst", company_name: "Company Q", job_location: "New York", job_type: "Full Time", experience_level: "Senior Level", job_link: "#" },
+    { job_position: "Systems Architect", company_name: "Company R", job_location: "Chicago", job_type: "Full Time", experience_level: "Senior Level", job_link: "#" },
+    { job_position: "Frontend Developer", company_name: "Company S", job_location: "San Francisco", job_type: "Full Time", experience_level: "Entry Level", job_link: "#" },
+    { job_position: "Backend Developer", company_name: "Company T", job_location: "Remote", job_type: "Part Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Software Engineer", company_name: "Company U", job_location: "Austin", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "DevOps Engineer", company_name: "Company V", job_location: "San Francisco", job_type: "Full Time", experience_level: "Senior Level", job_link: "#" },
+    { job_position: "UX/UI Designer", company_name: "Company W", job_location: "Remote", job_type: "Full Time", experience_level: "Entry Level", job_link: "#" },
+    { job_position: "Mobile Developer", company_name: "Company X", job_location: "Chicago", job_type: "Part Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Product Manager", company_name: "Company Y", job_location: "Los Angeles", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Data Scientist", company_name: "Company Z", job_location: "San Francisco", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Business Analyst", company_name: "Company AA", job_location: "New York", job_type: "Full Time", experience_level: "Entry Level", job_link: "#" },
+    { job_position: "QA Engineer", company_name: "Company AB", job_location: "Remote", job_type: "Full Time", experience_level: "Senior Level", job_link: "#" },
+    { job_position: "Security Engineer", company_name: "Company AC", job_location: "San Francisco", job_type: "Part Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Cloud Engineer", company_name: "Company AD", job_location: "Los Angeles", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Data Analyst", company_name: "Company AE", job_location: "Austin", job_type: "Part Time", experience_level: "Entry Level", job_link: "#" },
+    { job_position: "Product Designer", company_name: "Company AF", job_location: "Chicago", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Fullstack Developer", company_name: "Company AG", job_location: "Remote", job_type: "Part Time", experience_level: "Entry Level", job_link: "#" },
+    { job_position: "Mobile Developer", company_name: "Company AH", job_location: "San Francisco", job_type: "Full Time", experience_level: "Mid-Senior Level", job_link: "#" },
+    { job_position: "Software Engineer", company_name: "Company AI", job_location: "Los Angeles", job_type: "Full Time", experience_level: "Senior Level", job_link: "#" },
+  ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const url = "https://api.scrapingdog.com/linkedinjobs";
-        const params = {
-          api_key: "66c1e63b078c04535d82e5c0",
-          field: field,
-          sort_by: sortBy,
-          job_type: jobType,
-          exp_level: expLevel,
-          work_type: workType,
-          geoid: "102713980",
-          page: 1
-        };
+  // Function to filter jobs
+  const filterJobs = () => {
+    let filteredJobs = jobsData;
 
-        const response = await axios.get(url, { params });
-        if (response.status === 200) {
-          setJobs(response.data); 
-        } else {
-          setError("Request failed with status code: " + response.status);
-        }
-      } catch (error) {
-        setError("An error occurred while fetching job data.");
-        console.error("An error occurred:", error);
-      }
-    };
-
-    if (field) fetchData(); 
-  }, [field, sortBy, jobType, expLevel, workType]);
-
-  const fetchSkills = async (jobTitle, index) => {
-    try {
-      const response = await axios.post('http://localhost:5000/extract_skills', { job_title: jobTitle });
-      setSkills(prevSkills => ({
-        ...prevSkills,
-        [index]: response.data.skills
-      }));
-    } catch (error) {
-      console.error("Failed to fetch skills:", error);
+    if (jobType !== "All") {
+      filteredJobs = filteredJobs.filter((job) => job.job_type === jobType);
     }
+
+    if (expLevel !== "All") {
+      filteredJobs = filteredJobs.filter((job) => job.experience_level === expLevel);
+    }
+
+    if (jobLocation !== "All") {
+      filteredJobs = filteredJobs.filter((job) => job.job_location === jobLocation);
+    }
+
+    setJobs(filteredJobs);
   };
 
-  const handleCheckboxChange = async (job, index) => {
-    const email = localStorage.getItem("userEmail");
-    
-    try {
-      const response = await axios.post('http://localhost:3000/application', {
-        email,
-        jobTitle: job.job_position,
-        company: job.company_name,
-        location: job.job_location
-      });
-
-      if (response.data.status === 'success') {
-        setAppliedJobs(prev => ({ ...prev, [index]: true }));
-        alert('Job application information saved successfully!');
-      }
-    } catch (error) {
-      console.error('Failed to save job application information:', error);
-    }
+  // Handle Apply Now button click
+  const handleApplyNow = (job) => {
+    onApply(job); // Call the parent handler
+    alert(`You have applied for ${job.job_position} at ${job.company_name}!`);
   };
 
   return (
     <>
-    <Navbar/>
-        <div className='JobContainer'>
-      
-      
-      <div className="jobBody">
-        <div className="filter-container">
-          <select value={field} onChange={(e) => setField(e.target.value)}>
-            <option value="software developer">Software Developer</option>
-            <option value="frontend developer">Frontend Developer</option>
-            <option value="web developer">Web Developer</option>
-            <option value="software engineer">Software Engineer</option>
-            <option value="data scientist">Data Scientist</option>
-            <option value="product manager">Product Manager</option>
-            <option value="ux designer">UX Designer</option>
-            <option value="backend developer">Backend Developer</option>
-          </select>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="">Sort By</option>
-            <option value="day">Last 24 hours</option>
-            <option value="week">Last 7 days</option>
-            <option value="month">Last 30 days</option>
-          </select>
-          <select value={jobType} onChange={(e) => setJobType(e.target.value)}>
-            <option value="">Job Type</option>
-            <option value="full_time">Full Time</option>
-            <option value="part_time">Part Time</option>
-            <option value="temporary">Temporary</option>
-            <option value="contract">Contract</option>
-            <option value="volunteer">Volunteer</option>
-          </select>
-          <select value={expLevel} onChange={(e) => setExpLevel(e.target.value)}>
-            <option value="">Experience Level</option>
-            <option value="internship">Internship</option>
-            <option value="entry_level">Entry Level</option>
-            <option value="associate">Associate</option>
-            <option value="mid_senior_level">Mid-Senior Level</option>
-            <option value="director">Director</option>
-          </select>
-          <select value={workType} onChange={(e) => setWorkType(e.target.value)}>
-            <option value="">Work Type</option>
-            <option value="at_work">On-Site</option>
-            <option value="remote">Remote</option>
-            <option value="hybrid">Hybrid</option>
-          </select>
-        </div>
+      <Navbar />
+      <div className="JobContainer">
+        <div className="jobBody">
+          <div className="filter-container">
+            <select value={jobLocation} onChange={(e) => setJobLocation(e.target.value)}>
+              <option value="All">All Locations</option>
+              <option value="San Francisco">San Francisco</option>
+              <option value="New York">New York</option>
+              <option value="Remote">Remote</option>
+              <option value="Los Angeles">Los Angeles</option>
+              <option value="Austin">Austin</option>
+            </select>
+            <select value={jobType} onChange={(e) => setJobType(e.target.value)}>
+              <option value="All">All Job Types</option>
+              <option value="Full Time">Full Time</option>
+              <option value="Part Time">Part Time</option>
+            </select>
+            <select value={expLevel} onChange={(e) => setExpLevel(e.target.value)}>
+              <option value="All">All Experience Levels</option>
+              <option value="Entry Level">Entry Level</option>
+              <option value="Mid-Senior Level">Mid-Senior Level</option>
+              <option value="Senior Level">Senior Level</option>
+            </select>
+            <button onClick={filterJobs}>Apply Filters</button>
+          </div>
 
-        <div className="job-list">
-          {jobs.length === 0 && !error ? (
-            <p>Loading...</p>
-          ) : (
-            jobs.map((job, index) => (
-              <div className="job-card" key={index}>
-                <img src={job.company_logo_url} alt={`${job.company_name} logo`} className="company-logo" />
-                <h2 className="job-position">{job.job_position}</h2>
-                <p className="company-name">{job.company_name}</p>
-                <p className="job-location">{job.job_location}</p>
-                <a href={job.job_link} className="job-link" target="_blank" rel="noopener noreferrer">Apply Now</a>
-                <button onClick={() => fetchSkills(job.job_position, index)}>Show Skills</button>
-                <input
-                  type="checkbox"
-                  name="applied"
-                  id="applied"
-                  checked={appliedJobs[index] || false}
-                  onChange={() => handleCheckboxChange(job, index)}
-                /> I have applied for this job.
-                {skills[index] && (
-                  <div className="skills-list">
-                    <h3>Relevant Skills:</h3>
-                    <ul>
-                      {skills[index].map((skill, skillIndex) => (
-                        <li key={skillIndex}>{skill}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+          <div className="job-list">
+            {jobs.map((job, index) => (
+              <div key={index} className="job-card">
+                <div className="job-details">
+                  <h3>{job.job_position}</h3>
+                  <p><strong>Company:</strong> {job.company_name}</p>
+                  <p><strong>Location:</strong> {job.job_location}</p>
+                  <p><strong>Job Type:</strong> {job.job_type}</p>
+                  <p><strong>Experience Level:</strong> {job.experience_level}</p>
+                  <button onClick={() => handleApplyNow(job)} className="apply-btn">Apply Now</button>
+                </div>
               </div>
-            ))
-          )}
+            ))}
+          </div>
         </div>
       </div>
-    </div>
     </>
-
   );
 };
 

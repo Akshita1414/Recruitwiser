@@ -1,25 +1,29 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import torch
 from transformers import BertTokenizer, BertModel
 import numpy as np
-from pyresparser import ResumeParser
-import io
-from pdfminer.layout import LAParams
-from pdfminer.pdfpage import PDFPage
-from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
-from pdfminer.converter import TextConverter
+from pdfminer.high_level import extract_text
+import spacy
+import logging
 
 app = Flask(__name__)
-CORS(app, origins="http://localhost:5173")
+CORS(app, resources={r"/upload_resume": {"origins": "*"}})
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class SkillExtractorML:
     def __init__(self):
         try:
             self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
             self.model = BertModel.from_pretrained('bert-base-uncased')
+            # Load spaCy's English model
+            self.nlp = spacy.load('en_core_web_sm')
         except Exception as e:
-            print(f"Error loading model or tokenizer: {e}")
+            logger.error(f"Error loading model or tokenizer: {e}")
             raise
 
         self.skills = {
@@ -53,10 +57,23 @@ class SkillExtractorML:
     def _get_general_skill_embeddings(self):
         return np.vstack([self._embed_text(skill) for skill in self.general_skills])
 
-    def extract_skills(self, job_title, resume_skills):
+    def extract_skills(self, job_title, resume_text):
+        # Use spaCy for basic text processing
+        doc = self.nlp(resume_text)
+        extracted_skills = self._find_skills_in_text(doc)
+
         matched_category = next((category for category in self.skills if category in job_title.lower()), None)
         relevant_skills = self.skills[matched_category] if matched_category else self._find_similar_skills(job_title)
-        return [skill for skill in relevant_skills if skill not in resume_skills]
+
+        return [skill for skill in relevant_skills if skill not in extracted_skills]
+
+    def _find_skills_in_text(self, doc):
+        # Match the predefined skills in the resume text
+        skills_in_text = []
+        for token in doc:
+            if token.text.lower() in map(str.lower, self.general_skills):
+                skills_in_text.append(token.text)
+        return skills_in_text
 
     def _find_similar_skills(self, job_title):
         job_title_embedding = self._embed_text(job_title)
@@ -64,48 +81,45 @@ class SkillExtractorML:
         threshold = 0.7
         return [skill for skill, sim in zip(self.general_skills, similarities) if sim > threshold]
 
+
 extractor = SkillExtractorML()
 
-def pdf_reader(file):
-    resource_manager = PDFResourceManager()
-    fake_file_handle = io.StringIO()
-    converter = TextConverter(resource_manager, fake_file_handle, laparams=LAParams())
-    page_interpreter = PDFPageInterpreter(resource_manager, converter)
-
-    with file.stream as fh:
-        for page in PDFPage.get_pages(fh, caching=True, check_extractable=True):
-            page_interpreter.process_page(page)
-        text = fake_file_handle.getvalue()
-
-    converter.close()
-    fake_file_handle.close()
-    
-    return text
-
-@app.route('/upload_resume', methods=['POST'])
+@app.route('/upload_resume', methods=['POST', 'OPTIONS'])
 def upload_resume():
-    if 'pdf_file' not in request.files:
-        return jsonify({'error': 'No PDF file uploaded'}), 400
+    try:
+        if 'pdf_file' not in request.files:
+            logger.error('No PDF file uploaded')
+            return jsonify({'error': 'No PDF file uploaded'}), 400
 
-    pdf_file = request.files['pdf_file']
-    resume_text = pdf_reader(pdf_file)
+        pdf_file = request.files['pdf_file']
+        
+        # Ensure uploads directory exists
+        os.makedirs('uploads', exist_ok=True)
+        file_path = os.path.join('uploads', pdf_file.filename)
+        pdf_file.save(file_path)
 
-    with open("uploaded_resume.pdf", "wb") as f:
-        pdf_file.seek(0)  # reset file pointer
-        f.write(pdf_file.read())
+        # Extract text from PDF
+        resume_text = extract_text(file_path)
+        logger.info(f"Extracted text from {pdf_file.filename}")
 
-    resume_data = ResumeParser("uploaded_resume.pdf").get_extracted_data()
-    extracted_skills = resume_data.get("skills", []) if resume_data else []
+        job_title = request.form.get('job_title', '')
+        if not job_title:
+            logger.error('Job title is required')
+            return jsonify({'error': 'Job title is required'}), 400
 
-    job_title = request.form.get('job_title', '')
-    if not job_title:
-        return jsonify({'error': 'Job title is required'}), 400
+        recommended_skills = extractor.extract_skills(job_title, resume_text)
 
-    recommended_skills = extractor.extract_skills(job_title, extracted_skills)
-    return jsonify({
-        'extracted_skills': extracted_skills,
-        'recommended_skills': recommended_skills
-    })
+        # Log the results
+        logger.info(f"Job Title: {job_title}")
+        logger.info(f"Recommended Skills: {recommended_skills}")
+
+        return jsonify({
+            'recommended_skills': recommended_skills
+        })
+
+    except Exception as e:
+        logger.error(f"Error processing resume: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
